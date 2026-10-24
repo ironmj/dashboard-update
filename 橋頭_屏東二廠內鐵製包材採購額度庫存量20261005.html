@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>鐵皮額度儀表板</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--card2:#1c232d;--line:#2a313c;--text:#e6edf3;--mute:#8b949e;
+--used:#e3a008;--remain:#2dd4a7;--back:#58a6ff;--pend:#b794f6;--shop:#58a6ff;--out:#b794f6;--days:#38bdf8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:19px/1.55 "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 18px 48px}
+h1{font-size:32px;margin:0 0 18px}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tabs button{background:none;border:0;color:var(--mute);font:inherit;font-size:20px;padding:12px 20px;cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--text);border-color:var(--days)}
+.page{display:none}.page.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:16px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+h2{font-size:23px;margin:0}h2.sec{font-size:26px;margin:26px 0 12px;color:#c9d1d9}h3.sub{font-size:18px;color:var(--mute);margin:16px 0 6px;font-weight:500}
+.chip{font-size:16px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 10px;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:16px;color:var(--mute);margin-bottom:10px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px}
+.used{background:var(--used)}.remain{background:var(--remain)}.back{background:var(--back)}.pend{background:var(--pend)}.shop{background:var(--shop)}.out{background:var(--out)}.days{background:var(--days)}
+.row{padding:9px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}.row.sum{background:var(--card2);margin:4px -10px 0;padding:9px 10px;border-radius:8px;border-top:0}
+.rh{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}.rh b{font-weight:600}.rt{margin-left:auto;color:var(--mute);font-size:16px}
+.tag{font-style:normal;font-size:15px;color:var(--used);border:1px solid var(--used);border-radius:4px;padding:0 6px}
+.bar{display:flex;height:34px;border-radius:6px;overflow:hidden;background:#222a35}
+.seg{display:flex;align-items:center;justify-content:center;font-size:16px;color:#0d1117;font-weight:600;white-space:nowrap;overflow:hidden;min-width:2px}
+.rm{display:flex;flex-wrap:wrap;gap:4px 20px;color:var(--mute);font-size:16px;margin-top:6px}.rm b{color:var(--text);font-weight:600}
+.hb{display:grid;gap:7px}.hrow{display:grid;grid-template-columns:210px 1fr 72px;gap:10px;align-items:center;font-size:17px}
+.hl em{font-style:normal;font-size:14px;color:var(--used);margin-left:6px}
+.ht{height:22px;background:#222a35;border-radius:5px;overflow:hidden}.hf{height:100%;border-radius:5px}.hv{text-align:right;font-variant-numeric:tabular-nums}
+.big{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}.big b{font-size:52px;color:var(--days);line-height:1}.big span{color:var(--mute);font-size:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.chips span{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-size:16px;color:var(--mute)}.chips b{color:var(--text)}
+details{margin-top:14px}summary{cursor:pointer;color:var(--mute);font-size:16px}
+.tw{overflow-x:auto;margin-top:8px}table{border-collapse:collapse;width:100%;font-size:16px}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;white-space:nowrap}th{color:var(--mute);font-weight:500}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tip{position:fixed;display:none;pointer-events:none;background:#000c;border:1px solid var(--line);color:#fff;font-size:16px;padding:5px 11px;border-radius:6px;z-index:9}
+footer{margin-top:28px;color:var(--mute);font-size:15px}
+</style></head><body><div class="wrap">
+<h1>鐵皮額度儀表板</h1><div class="tabs"><button class="on" data-p="p1">鐵皮採購額度</button><button data-p="p2">護角分條庫存</button></div>
+<div class="page on" id="p1"></div><div class="page" id="p2"></div>
+<footer id="src"></footer></div>
+<script>
+const D={"quota": [{"title": "20260616009 益大採購", "date": "10/5", "labelHeader": "裁版長度類別", "headers": ["總採購量(kg)", "使用量(kg)", "採購案剩餘可使用量(kg)"], "roles": {"total": "總採購量(kg)", "used": "使用量(kg)", "remain": "採購案剩餘可使用量(kg)"}, "rows": [{"label": "A (610mm以下)", "vals": {"總採購量(kg)": 10000, "使用量(kg)": 0, "採購案剩餘可使用量(kg)": 10000}, "note": null}, {"label": "B (611mm~1218mm)", "vals": {"總採購量(kg)": 120000, "使用量(kg)": 43220, "採購案剩餘可使用量(kg)": 76780}, "note": null}, {"label": "C (1219mm以上)", "vals": {"總採購量(kg)": 350000, "使用量(kg)": 313005, "採購案剩餘可使用量(kg)": 36995}, "note": null}, {"label": "合計", "vals": {"總採購量(kg)": 480000, "使用量(kg)": 356225, "採購案剩餘可使用量(kg)": 123775}, "note": null}]}, {"title": "20260316034 劦耀採購", "date": "10/5", "labelHeader": "裁版長度類別", "headers": ["總採購量(kg)", "使用量(kg)", "採購案剩餘可使用量(kg)"], "roles": {"total": "總採購量(kg)", "used": "使用量(kg)", "remain": "採購案剩餘可使用量(kg)"}, "rows": [{"label": "A (610mm以下)", "vals": {"總採購量(kg)": 10000, "使用量(kg)": 0, "採購案剩餘可使用量(kg)": 10000}, "note": null}, {"label": "B (611mm~1218mm)", "vals": {"總採購量(kg)": 200000, "使用量(kg)": 78800, "採購案剩餘可使用量(kg)": 121200}, "note": null}, {"label": "C (1219mm以上)", "vals": {"總採購量(kg)": 400000, "使用量(kg)": 397900, "採購案剩餘可使用量(kg)": 2100}, "note": null}, {"label": "合計", "vals": {"總採購量(kg)": 610000, "使用量(kg)": 476700, "採購案剩餘可使用量(kg)": 133300}, "note": null}]}, {"title": "20260915043 劦耀採購", "date": "10/5", "labelHeader": "裁版長度類別", "headers": ["總採購量(kg)", "使用量(kg)", "採購案剩餘可使用量(kg)"], "roles": {"total": "總採購量(kg)", "used": "使用量(kg)", "remain": "採購案剩餘可使用量(kg)"}, "rows": [{"label": "A (610mm以下)", "vals": {"總採購量(kg)": 10000, "使用量(kg)": 0, "採購案剩餘可使用量(kg)": 10000}, "note": null}, {"label": "B (611mm~1218mm)", "vals": {"總採購量(kg)": 220000, "使用量(kg)": 0, "採購案剩餘可使用量(kg)": 220000}, "note": null}, {"label": "C (1219mm以上)", "vals": {"總採購量(kg)": 580000, "使用量(kg)": 0, "採購案剩餘可使用量(kg)": 580000}, "note": null}, {"label": "合計", "vals": {"總採購量(kg)": 810000, "使用量(kg)": 0, "採購案剩餘可使用量(kg)": 810000}, "note": null}]}, {"title": "益大+劦耀 總採購額度", "date": "10/5", "labelHeader": "裁版長度類別", "headers": ["總採購量(kg)", "使用量(kg)", "橋屏二廠使用量", "採購案剩餘可使用量(kg)", "剩餘可使用天數", "備註"], "roles": {"total": "總採購量(kg)", "used": "使用量(kg)", "plant": "橋屏二廠使用量", "remain": "採購案剩餘可使用量(kg)", "days": "剩餘可使用天數"}, "rows": [{"label": "A (610mm以下)", "vals": {"總採購量(kg)": 20000, "使用量(kg)": 0, "橋屏二廠使用量": 6000, "採購案剩餘可使用量(kg)": 20000, "剩餘可使用天數": 100, "備註": "備用"}, "note": "備用"}, {"label": "B (611mm~1218mm)", "vals": {"總採購量(kg)": 320000, "使用量(kg)": 122020, "橋屏二廠使用量": 96000, "採購案剩餘可使用量(kg)": 197980, "剩餘可使用天數": 61.868750000000006}, "note": null}, {"label": "C (1219mm以上)", "vals": {"總採購量(kg)": 1330000, "使用量(kg)": 710905, "橋屏二廠使用量": 198000, "採購案剩餘可使用量(kg)": 619095, "剩餘可使用天數": 93.80227272727274}, "note": null}, {"label": "合計", "vals": {"總採購量(kg)": 1670000, "使用量(kg)": 832925, "橋屏二廠使用量": 300000, "採購案剩餘可使用量(kg)": 837075, "剩餘可使用天數": 83.7075}, "note": null}]}], "slit": {"requests": [{"name": "益大分條請購案", "rowLabel": "分條請購案額度", "vals": {"總採購量(kg)": 300000, "送出量(kg)": 225995, "送回量(kg)": 123290, "託工送出未送回量(kg)": 102705, "採購案剩餘可使用量(kg)": 74005, "剩於天數": 15.417708333333332}, "roles": {"total": "總採購量(kg)", "sent": "送出量(kg)", "back": "送回量(kg)", "pend": "託工送出未送回量(kg)", "remain": "採購案剩餘可使用量(kg)", "days": "剩於天數"}}, {"name": "劦耀分條請購案", "rowLabel": "分條請購案額度", "vals": {"總採購量(kg)": 480000, "送出量(kg)": 0, "送回量(kg)": 0, "託工送出未送回量(kg)": 0, "採購案剩餘可使用量(kg)": 480000, "剩於天數": 100}, "roles": {"total": "總採購量(kg)", "sent": "送出量(kg)", "back": "送回量(kg)", "pend": "託工送出未送回量(kg)", "remain": "採購案剩餘可使用量(kg)", "days": "剩於天數"}}], "stocks": [{"name": "外護角", "date": "截至 2026.10.05", "cols": ["橋頭+屏東廠內庫存", "益大代工數量", "總庫存"], "rows": [{"label": "噸數(KG)", "vals": {"橋頭+屏東廠內庫存": 163290, "益大代工數量": 123290, "總庫存": 286580}}, {"label": "橋頭平均一個月用量(KG)", "vals": {"橋頭+屏東廠內庫存": 60000, "益大代工數量": 60000, "總庫存": 60000}}, {"label": "屏東平均一個月用量(KG)", "vals": {"橋頭+屏東廠內庫存": 36000, "益大代工數量": 36000, "總庫存": 36000}}, {"label": "平均可使用天數", "vals": {"橋頭+屏東廠內庫存": 51.028125, "益大代工數量": 38.528124999999996, "總庫存": 89.55625}}]}, {"name": "內護角", "date": "截至 2026.10.05", "cols": ["橋頭+屏東廠內庫存", "益大代工數量", "總庫存"], "rows": [{"label": "噸數(KG)", "vals": {"橋頭+屏東廠內庫存": 65000, "益大代工數量": 0, "總庫存": 65000}}, {"label": "橋頭平均一個月用量(KG)", "vals": {"橋頭+屏東廠內庫存": 30000, "益大代工數量": 30000, "總庫存": 30000}}, {"label": "屏東平均一個月用量(KG)", "vals": {"橋頭+屏東廠內庫存": 18000, "益大代工數量": 18000, "總庫存": 18000}}, {"label": "平均可使用天數", "vals": {"橋頭+屏東廠內庫存": 40.625, "益大代工數量": 0, "總庫存": 40.625}}]}]}, "generated": "2026-10-22 06:53", "sources": ["益大+劦耀鐵皮採購剩餘額度.xlsx", "橋+屏內外護角分條庫存(盤點至20261005).xls"]};
+const fmt=n=>typeof n==='number'?n.toLocaleString('en-US',{maximumFractionDigits:1}):(n==null?'':String(n));
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const num=v=>typeof v==='number'?v:null;
+function mk(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
+function bar(parts,total){const b=mk('div','bar');if(!(total>0))return b;
+  parts.forEach(p=>{if(!(p.v>0))return;const pct=p.v/total*100;const s=mk('div','seg '+p.cls);
+    s.style.width=pct+'%';s.dataset.tip=p.label+'：'+fmt(p.v);b.appendChild(s)});return b}
+function hbars(items,max){const w=mk('div','hb');items.forEach(i=>{const r=mk('div','hrow');
+  r.innerHTML=`<div class="hl">${esc(i.label)}${i.note?`<em>${esc(i.note)}</em>`:''}</div><div class="ht"><div class="hf ${i.cls||'days'}" style="width:${max>0?i.v/max*100:0}%" data-tip="${esc(i.label)}：${fmt(i.v)}"></div></div><div class="hv">${fmt(i.v)}</div>`;
+  w.appendChild(r)});return w}
+const tbl=(h,r)=>`<details><summary>查看明細表</summary><div class="tw"><table><thead><tr>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${r.map(a=>`<tr>${a.map((c,i)=>`<td class="${i?'n':''}">${esc(fmt(c))}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;
+
+function renderQuota(root0){
+  const root=mk('div','grid');root0.appendChild(root);
+  D.quota.forEach(b=>{const R=b.roles,card=mk('section','card');
+    card.appendChild(mk('div','card-h',`<h2>${esc(b.title)}</h2><span class="chip">更新日期 ${esc(b.date)}</span>`));
+    b.rows.forEach(r=>{const v=r.vals,t=num(v[R.total]);
+      const row=mk('div','row'+(r.label.startsWith('合計')?' sum':''));
+      row.innerHTML=`<div class="rh"><b>${esc(r.label)}</b>${r.note?`<em class="tag">${esc(r.note)}</em>`:''}<span class="rt">${esc(R.total)}　${fmt(t)}</span></div>`;
+      row.appendChild(bar([{label:'使用量',v:num(v[R.used]),cls:'used'},{label:'剩餘可使用量',v:num(v[R.remain]),cls:'remain'}],t));
+      row.insertAdjacentHTML('beforeend',`<div class="rm"><span><i class="dot used"></i>使用量 <b>${fmt(v[R.used])}</b></span><span><i class="dot remain"></i>剩餘可使用量 <b>${fmt(v[R.remain])}</b></span>${R.plant?`<span>${esc(R.plant)} <b>${fmt(v[R.plant])}</b></span>`:''}</div>`);
+      card.appendChild(row)});
+    if(R.days){const it=b.rows.filter(r=>num(r.vals[R.days])!=null).map(r=>({label:r.label,v:r.vals[R.days],note:r.note}));
+      if(it.length){card.appendChild(mk('h3','sub',esc(R.days)));card.appendChild(hbars(it,Math.max(...it.map(i=>i.v))))}}
+    card.insertAdjacentHTML('beforeend',tbl([b.labelHeader,...b.headers],b.rows.map(r=>[r.label,...b.headers.map(h=>r.vals[h])])));
+    root.appendChild(card)})}
+
+function renderSlit(root){
+  root.appendChild(mk('h2','sec','分條請購案'));
+  let g=mk('div','grid');
+  D.slit.requests.forEach(q=>{const K=q.roles,v=q.vals,card=mk('section','card');
+    card.appendChild(mk('div','card-h',`<h2>${esc(q.name)}</h2><span class="chip">${esc(q.rowLabel)}</span>`));
+    if(K.days)card.insertAdjacentHTML('beforeend',`<div class="big"><b>${fmt(v[K.days])}</b><span>${esc(K.days)}</span></div>`);
+    card.appendChild(bar([{label:'送回量',v:num(v[K.back]),cls:'back'},{label:'託工送出未送回量',v:num(v[K.pend]),cls:'pend'},{label:'剩餘可使用量',v:num(v[K.remain]),cls:'remain'}],num(v[K.total])));
+    card.insertAdjacentHTML('beforeend',`<div class="rm"><span>${esc(K.total)} <b>${fmt(v[K.total])}</b></span><span>${esc(K.sent)} <b>${fmt(v[K.sent])}</b></span><span><i class="dot back"></i>${esc(K.back)} <b>${fmt(v[K.back])}</b></span><span><i class="dot pend"></i>${esc(K.pend)} <b>${fmt(v[K.pend])}</b></span><span><i class="dot remain"></i>${esc(K.remain)} <b>${fmt(v[K.remain])}</b></span></div>`);
+    g.appendChild(card)});
+  root.appendChild(g);
+  root.appendChild(mk('h2','sec','護角庫存'));
+  g=mk('div','grid');
+  let mx=0;D.slit.stocks.forEach(s=>{const d=s.rows.find(r=>r.label.includes('可使用天數'));if(d)Object.values(d.vals).forEach(x=>{if(num(x)>mx)mx=x})});
+  D.slit.stocks.forEach(s=>{const H=s.cols,card=mk('section','card');
+    const tc=H.find(c=>c.includes('總庫存')),oc=H.find(c=>c.includes('代工')),sc=H.find(c=>c!==tc&&c!==oc);
+    const inv=s.rows.find(r=>r.label.includes('噸數')),dy=s.rows.find(r=>r.label.includes('可使用天數')),us=s.rows.filter(r=>r.label.includes('用量'));
+    card.appendChild(mk('div','card-h',`<h2>${esc(s.name)}</h2><span class="chip">${esc(s.date)}</span>`));
+    card.insertAdjacentHTML('beforeend',`<h3 class="sub" style="margin-top:0">${esc(inv.label)}　${esc(tc)} ${fmt(inv.vals[tc])}</h3>`);
+    card.appendChild(bar([{label:sc,v:num(inv.vals[sc]),cls:'shop'},{label:oc,v:num(inv.vals[oc]),cls:'out'}],num(inv.vals[tc])));
+    card.insertAdjacentHTML('beforeend',`<div class="rm"><span><i class="dot shop"></i>${esc(sc)} <b>${fmt(inv.vals[sc])}</b></span><span><i class="dot out"></i>${esc(oc)} <b>${fmt(inv.vals[oc])}</b></span></div>`);
+    if(dy){card.appendChild(mk('h3','sub',esc(dy.label)));
+      card.appendChild(hbars([[sc,'shop'],[oc,'out'],[tc,'days']].filter(a=>a[0]).map(a=>({label:a[0],v:num(dy.vals[a[0]]),cls:a[1]})).filter(i=>i.v!=null),mx))}
+    if(us.length)card.insertAdjacentHTML('beforeend','<div class="chips">'+us.map(r=>`<span>${esc(r.label)} <b>${fmt(r.vals[sc])}</b></span>`).join('')+'</div>');
+    card.insertAdjacentHTML('beforeend',tbl(['',...H],s.rows.map(r=>[r.label,...H.map(h=>r.vals[h])])));
+    g.appendChild(card)});
+  root.appendChild(g)}
+
+renderQuota(document.getElementById('p1'));renderSlit(document.getElementById('p2'));
+document.getElementById('src').textContent='來源：'+D.sources.join('　｜　');
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button,.page').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');document.getElementById(b.dataset.p).classList.add('on')});
+const tip=mk('div','tip');document.body.appendChild(tip);
+document.addEventListener('mousemove',e=>{const t=e.target.closest('[data-tip]');
+  if(!t){tip.style.display='none';return}
+  tip.textContent=t.dataset.tip;tip.style.display='block';
+  tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(e.clientY+16)+'px'});
+</script></body></html>
